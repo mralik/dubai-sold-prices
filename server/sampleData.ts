@@ -6,7 +6,7 @@
 
 import { SAMPLE_AREAS, type PropertyType } from "./areas";
 
-export type Rooms = "studio" | "1" | "2" | "3" | "4" | "5+";
+export type Rooms = "studio" | "1" | "2" | "3" | "4" | "5+" | "unknown";
 export type Registration = "off-plan" | "ready";
 
 export interface SaleRecord {

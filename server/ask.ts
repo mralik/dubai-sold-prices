@@ -103,6 +103,10 @@ export async function ask(question: string): Promise<AskResult> {
   if (filterReason) rawPlan = { ...rawPlan, status: "unsupported", unsupportedReason: filterReason };
 
   const { plan, warnings } = validatePlan(rawPlan);
+  if (DATA_INFO.mode === "dld" && plan.status === "ok" && plan.propertyType === "townhouse") {
+    plan.propertyType = "villa";
+    warnings.push("DLD records townhouses as villas, so this includes both.");
+  }
   const resolvedPlaces = resolvedPlacesForQuestion(question, plan);
   const placeLabels = resolvedPlaces.map((place) => place.label);
   const base = {

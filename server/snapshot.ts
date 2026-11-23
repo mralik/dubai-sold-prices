@@ -251,13 +251,15 @@ export function classifySegments(recent: MixSale[], prior: MixSale[]): { price: 
  * in each period.
  */
 export function likeForLikeChange(recent: MixSale[], prior: MixSale[]): LikeForLike | null {
-  if (recent.length < MIN_CHANGE_SALES || prior.length < MIN_CHANGE_SALES) return null;
-  const { price } = classifySegments(recent, prior);
+  const recentKnown = recent.filter((sale) => sale.rooms !== "unknown");
+  const priorKnown = prior.filter((sale) => sale.rooms !== "unknown");
+  if (recentKnown.length < MIN_CHANGE_SALES || priorKnown.length < MIN_CHANGE_SALES) return null;
+  const { price } = classifySegments(recentKnown, priorKnown);
   if (price.length === 0) return null;
   const keptRecent = price.reduce((sum, segment) => sum + segment.recentSales, 0);
   const keptPrior = price.reduce((sum, segment) => sum + segment.priorSales, 0);
-  const recentCoverage = keptRecent / recent.length;
-  const priorCoverage = keptPrior / prior.length;
+  const recentCoverage = keptRecent / recentKnown.length;
+  const priorCoverage = keptPrior / priorKnown.length;
   if (recentCoverage < MIN_COVERAGE || priorCoverage < MIN_COVERAGE) return null;
   const biggest = [...price].sort((a, b) =>
     (b.recentSales + b.priorSales) - (a.recentSales + a.priorSales)
@@ -269,8 +271,8 @@ export function likeForLikeChange(recent: MixSale[], prior: MixSale[]): LikeForL
     coveragePct: Math.round(Math.min(recentCoverage, priorCoverage) * 1000) / 10,
     recentMedianPsf: biggest.recentMedianPsf,
     priorMedianPsf: biggest.priorMedianPsf,
-    recentSales: recent.length,
-    priorSales: prior.length,
+    recentSales: recentKnown.length,
+    priorSales: priorKnown.length,
     registration: biggest.registration,
     propertyType: biggest.propertyType,
     rooms: biggest.rooms,

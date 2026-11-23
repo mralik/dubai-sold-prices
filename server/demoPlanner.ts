@@ -28,6 +28,10 @@ function findPlaces(q: string, patterns: { pattern: string; name: string }[]): {
     const match = re.exec(text);
     if (!match) continue;
     const start = match.index + match[1]!.length;
+    const after = text.slice(start + match[2]!.length);
+    // Do not let a broad nickname consume a numbered place, while still
+    // allowing questions such as "Damac Hills 3 bed".
+    if (/^\s+\d+\b(?!\s*[- ]?\s*(?:beds?|bedrooms?|br|b\/r|bhk|bd)\b)/.test(after)) continue;
     if (!found.has(name)) found.set(name, start);
     // Blank out the match (same length) so shorter nicknames can't match it again.
     text = text.slice(0, start) + " ".repeat(match[2]!.length) + text.slice(start + match[2]!.length);
@@ -38,9 +42,6 @@ function findPlaces(q: string, patterns: { pattern: string; name: string }[]): {
 
 const COMPARISON = /\b(compare|vs\.?|versus)\b/;
 
-const PROPERTY_TYPE_MESSAGE = "I can answer one property type at a time. Ask about villas and townhouses separately, or leave the type out to include both.";
-const BEDROOM_MESSAGE = "I can answer one bedroom count at a time. Ask about studios and 1-beds separately, or leave the bedrooms out to include all.";
-
 function maskPlaceNames(q: string): string {
   const communityMatch = findPlaces(q, COMMUNITY_PATTERNS);
   return findPlaces(communityMatch.masked, AREA_PATTERNS).masked;
@@ -48,9 +49,11 @@ function maskPlaceNames(q: string): string {
 
 function mentionedPropertyTypes(q: string): QueryPlan["propertyType"][] {
   const found: QueryPlan["propertyType"][] = [];
-  if (/\bvillas?\b/.test(q)) found.push("villa");
-  if (/\btown\s?houses?\b/.test(q)) found.push("townhouse");
-  if (/\b(apartments?|flats?|units?|condos?)\b/.test(q)) found.push("apartment");
+  for (const match of q.matchAll(/\b(villas?|town\s?houses?|apartments?|flats?|units?|condos?)\b/g)) {
+    const value = match[1]!;
+    const type: QueryPlan["propertyType"] = /^villa/.test(value) ? "villa" : /^town/.test(value) ? "townhouse" : "apartment";
+    if (!found.includes(type)) found.push(type);
+  }
   return found;
 }
 
@@ -60,17 +63,18 @@ function roomValue(value: string): QueryPlan["rooms"] {
 }
 
 function mentionedRooms(q: string): QueryPlan["rooms"][] {
-  const found = new Set<QueryPlan["rooms"]>();
-  if (/\bstudios?\b/.test(q)) found.add("studio");
+  const matches: { value: QueryPlan["rooms"]; index: number }[] = [];
+  for (const match of q.matchAll(/\bstudios?\b/g)) matches.push({ value: "studio", index: match.index });
   for (const match of q.matchAll(/\b(one|two|three|four|five|\d)\s*[- ]?\s*(?:\+\s*)?(?:beds?|bedrooms?|br|b\/r|bhk|bd)\b/g)) {
-    found.add(roomValue(match[1]!));
+    matches.push({ value: roomValue(match[1]!), index: match.index });
   }
-  // In "1 or 2 bed", the bedroom suffix is shared by both numbers.
-  for (const match of q.matchAll(/\b(one|two|three|four|five|\d)\s*(?:and|or|&|\/|,)\s*(one|two|three|four|five|\d)\s*[- ]?\s*(?:\+\s*)?(?:beds?|bedrooms?|br|b\/r|bhk|bd)\b/g)) {
-    found.add(roomValue(match[1]!));
-    found.add(roomValue(match[2]!));
+  // In "1 or 2 bed" and "2-3 bed", the bedroom suffix is shared.
+  for (const match of q.matchAll(/\b(one|two|three|four|five|\d)\s*(?:and|or|to|through|&|\/|,|-|–)\s*(one|two|three|four|five|\d)\s*[- ]?\s*(?:\+\s*)?(?:beds?|bedrooms?|br|b\/r|bhk|bd)\b/g)) {
+    matches.push({ value: roomValue(match[1]!), index: match.index });
+    matches.push({ value: roomValue(match[2]!), index: match.index + match[0].length });
   }
-  return [...found];
+  matches.sort((a, b) => a.index - b.index);
+  return matches.reduce<QueryPlan["rooms"][]>((values, match) => values.includes(match.value) ? values : [...values, match.value], []);
 }
 
 function mentionedRegistrations(q: string): QueryPlan["registration"][] {
@@ -85,12 +89,18 @@ export function filterIntentUnsupportedReason(question: string, plan?: QueryPlan
   const q = maskPlaceNames(question.toLowerCase().replace(/\s+/g, " ").trim());
   const types = mentionedPropertyTypes(q);
   const rooms = mentionedRooms(q);
-  if (types.length > 1) return PROPERTY_TYPE_MESSAGE;
-  if (rooms.length > 1) return BEDROOM_MESSAGE;
-  if (plan?.status === "ok" && types.length === 1 && plan.propertyType !== types[0]) return PROPERTY_TYPE_MESSAGE;
-  if (plan?.status === "ok" && rooms.length === 1 && plan.rooms !== rooms[0]) return BEDROOM_MESSAGE;
+  if (types.length > 1) return propertyTypeMessage(types);
+  if (rooms.length > 1) return bedroomMessage(rooms);
+  if (plan?.status === "ok" && types.length === 1 && plan.propertyType !== types[0]) return propertyTypeMessage(types);
+  if (plan?.status === "ok" && rooms.length === 1 && plan.rooms !== rooms[0]) return bedroomMessage(rooms);
   return null;
 }
+
+const joinAsked = (values: string[]) => values.length === 1 ? values[0]! : `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
+const propertyTypeMessage = (types: QueryPlan["propertyType"][]) =>
+  `I can answer one property type at a time. Ask about ${joinAsked(types.map((type) => type === "townhouse" ? "townhouses" : `${type}s`))} separately, or leave the type out to include both.`;
+const bedroomMessage = (rooms: QueryPlan["rooms"][]) =>
+  `I can answer one bedroom count at a time. Ask about ${joinAsked(rooms.map((room) => room === "studio" ? "studios" : `${room}-beds`))} separately, or leave the bedrooms out to include all.`;
 
 function friendlyPlace(name: string): string {
   const area = AREAS.find((candidate) => candidate.name === name);
@@ -108,12 +118,8 @@ export function comparisonUnsupportedReason(question: string): string | null {
     return `I can compare up to 2 places at a time. Try 'Compare ${suggestion.join(" and ")}'.`;
   }
   if (COMPARISON.test(q)) {
-    const types = [
-      /\b(villas?)\b/.test(q),
-      /\b(town\s?houses?)\b/.test(q),
-      /\b(apartments?|flats?|units?|condos?)\b/.test(q),
-    ].filter(Boolean).length;
-    if (types > 1) return "I can compare places, not property types yet. Ask about villas and townhouses separately.";
+    const types = mentionedPropertyTypes(maskPlaceNames(q));
+    if (types.length > 1) return propertyTypeMessage(types);
   }
   return null;
 }

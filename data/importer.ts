@@ -62,8 +62,8 @@ export async function importDldCsv(inputFile: string, outputFile: string, reques
     const propertyRaw = `lower(coalesce(nullif(${value(m.propertySubType)}, ''), ${value(m.propertyType)}))`;
     const roomsRaw = `lower(${value(m.rooms)})`;
     const registrationRaw = `lower(${value(m.registration)})`;
-    const typeExpr = `CASE WHEN ${propertyRaw} IN ('unit','apartment','flat') THEN 'apartment' WHEN ${propertyRaw}='villa' THEN 'villa' WHEN ${propertyRaw} IN ('townhouse','town house','stacked townhouses') THEN 'townhouse' END`;
-    const roomsExpr = `CASE WHEN ${roomsRaw}='studio' THEN 'studio' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])1([^0-9]|$)') THEN '1' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])2([^0-9]|$)') THEN '2' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])3([^0-9]|$)') THEN '3' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])4([^0-9]|$)') THEN '4' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])([5-9]|[1-9][0-9])([^0-9]|$)') THEN '5+' END`;
+    const typeExpr = `CASE WHEN ${propertyRaw} IN ('unit','apartment','flat','stacked townhouses') THEN 'apartment' WHEN ${propertyRaw}='villa' THEN 'villa' WHEN ${propertyRaw} IN ('townhouse','town house') THEN 'townhouse' END`;
+    const roomsExpr = `CASE WHEN ${roomsRaw}='studio' THEN 'studio' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])1([^0-9]|$)') THEN '1' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])2([^0-9]|$)') THEN '2' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])3([^0-9]|$)') THEN '3' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])4([^0-9]|$)') THEN '4' WHEN regexp_matches(${roomsRaw}, '(^|[^0-9])([5-9]|[1-9][0-9])([^0-9]|$)') THEN '5+' WHEN ${propertyRaw}='villa' THEN 'unknown' END`;
     const registrationExpr = `CASE WHEN ${registrationRaw} IN ('off-plan','off plan','off-plan properties','initial sale') THEN 'off-plan' WHEN ${registrationRaw} IN ('ready','existing properties','secondary','resale') THEN 'ready' END`;
 
     const normalized = `

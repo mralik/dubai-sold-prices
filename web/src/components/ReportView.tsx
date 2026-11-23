@@ -99,6 +99,11 @@ export default function ReportView({ result, agent, onClose }: Props) {
               {summary.count < 5 && <p className="mt-1 pl-6">{VERY_LOW_SAMPLE_WARNING}</p>}
             </div>
           )}
+          {result.warnings.map((warning) => (
+            <p key={warning} className="mt-4 flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700" role="note">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />{warning}
+            </p>
+          ))}
         </section>
 
         {result.series.length >= 2 && (

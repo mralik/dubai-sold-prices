@@ -11,4 +11,9 @@ describe("community aliases", () => {
     expect(canonicalCommunity("Al Furjan")).toBe("Al Furjan");
     expect(communityValues(["Al Furjan"])).toEqual(["Al Furjan"]);
   });
+
+  it.each(["Damac Hills 2", "damac hills 2", "dh2", "akoya"])("maps %s only to DAMAC HILLS 2", (name) => {
+    expect(canonicalCommunity(name)).toBe("Damac Hills 2");
+    expect(communityValues(["Damac Hills 2"])).toEqual(["DAMAC HILLS 2"]);
+  });
 });

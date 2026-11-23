@@ -20,4 +20,4 @@ export const monthLong = (ym: string): string => {
 export const dateShort = (iso: string): string =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
-export const roomsLabel = (r: string): string => (r === "studio" ? "Studio" : `${r} bed`);
+export const roomsLabel = (r: string): string => (r === "unknown" ? "–" : r === "studio" ? "Studio" : `${r} bed`);

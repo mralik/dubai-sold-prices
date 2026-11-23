@@ -31,6 +31,10 @@
     "values": ["Arabian Ranches 3"],
     "aliases": ["arabian ranches 3", "ranches 3"]
   },
+  "Damac Hills 2": {
+    "values": ["DAMAC HILLS 2"],
+    "aliases": ["damac hills 2", "dh2", "akoya"]
+  },
   "Falcon City": {
     "values": ["Falcon City"],
     "aliases": ["falcon city", "falconcity"]

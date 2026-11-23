@@ -19,7 +19,7 @@ describe("DLD fixture import", () => {
     const fixture = resolve("tests/fixtures/dld_transactions.csv");
     const result = await importDldCsv(fixture, output, { from: "2026-09", to: "2026-09" });
 
-    expect(result.kept).toBe(20);
+    expect(result.kept).toBe(22);
     expect(result.dropped).toMatchObject({
       not_sale: 1,
       not_residential: 1,
@@ -32,7 +32,7 @@ describe("DLD fixture import", () => {
       implausible_price_per_sqft: 1,
       outside_range: 1,
     });
-    expect(result.keptByMonth).toEqual({ "2026-09": 20 });
+    expect(result.keptByMonth).toEqual({ "2026-09": 22 });
     expect(result).not.toHaveProperty("month");
     const metadata = JSON.parse(await readFile(`${output}.meta.json`, "utf8")) as { attribution: string };
     expect(metadata.attribution).toBe("Source: Dubai Land Department, via data.dubai (Open Data License)");
@@ -45,6 +45,10 @@ describe("DLD fixture import", () => {
       ]);
       const [converted] = await rows(db, `SELECT size_sqft FROM read_parquet(${sqlString(output)}) WHERE transaction_id='T001'`);
       expect(Number(converted?.size_sqft)).toBeCloseTo(484.38, 2);
+      const [unknownRoomVilla] = await rows(db, `SELECT rooms FROM read_parquet(${sqlString(output)}) WHERE transaction_id='T031'`);
+      expect(unknownRoomVilla?.rooms).toBe("unknown");
+      const [stackedTownhouse] = await rows(db, `SELECT property_type FROM read_parquet(${sqlString(output)}) WHERE transaction_id='T032'`);
+      expect(stackedTownhouse?.property_type).toBe("apartment");
     });
   });
 });

@@ -148,6 +148,16 @@ describe("snapshot", () => {
     expect(like!.coveragePct).toBe(100);
   });
 
+  it("leaves unknown-bedroom villas out of like-for-like segments", () => {
+    const prior = [...copies(30, "ready", "villa", "3", 1000), ...copies(40, "ready", "villa", "unknown", 700)];
+    const recent = [...copies(30, "ready", "villa", "3", 1100), ...copies(50, "ready", "villa", "unknown", 800)];
+    const like = likeForLikeChange(recent, prior);
+    expect(like?.rooms).toBe("3");
+    expect(like?.recentSales).toBe(30);
+    expect(like?.priorSales).toBe(30);
+    expect(like?.coveragePct).toBe(100);
+  });
+
   it("lists an 8x jump as a new launch, not as rising", () => {
     const prior = copies(10, "off-plan", "villa", "4", 1000);
     const recent = copies(80, "off-plan", "villa", "4", 2000);

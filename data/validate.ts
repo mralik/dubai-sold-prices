@@ -76,6 +76,16 @@ async function main() {
     comparisons.push({ question: testCase.question, expected_count: expected?.count, app_count: actual?.count, ok });
     if (!ok) throw new Error(`Community direct-query comparison failed: ${testCase.question}`);
   }
+  const damacVillasQuestion = "Villas in Damac Hills";
+  const damacVillasResult = await ask(damacVillasQuestion);
+  const [directDamacVillas] = await withDuckDb((db) => rows(db, `SELECT count(*) AS count, median(price_aed) AS median_price, median(price_per_sqft) AS median_psf
+    FROM ${source} WHERE area_name_en='Al Hebiah Third' AND property_type='villa'`));
+  const damacVillasOk = damacVillasResult.unsupported === null
+    && damacVillasResult.summary?.count === Number(directDamacVillas?.count)
+    && damacVillasResult.summary?.medianPrice === Math.round(Number(directDamacVillas?.median_price))
+    && damacVillasResult.summary?.medianPricePerSqft === Math.round(Number(directDamacVillas?.median_psf));
+  comparisons.push({ question: damacVillasQuestion, expected_count: directDamacVillas?.count, app_count: damacVillasResult.summary?.count, ok: damacVillasOk });
+  if (!damacVillasOk) throw new Error(`Direct-query comparison failed: ${damacVillasQuestion}`);
   const trendQuestion = "JVC 1-bed price per sq ft month by month";
   const trendResult = await ask(trendQuestion);
   const directTrend = await withDuckDb((db) => rows(db, `SELECT substr(instance_date, 1, 7) AS month, count(*) AS count
@@ -114,7 +124,7 @@ async function main() {
   comparisons.push({ question: allAreasQuestion, expected_count: allAreasCount, app_count: allAreasResult.summary?.count, ok: allAreasOk });
   if (!allAreasOk) throw new Error(`All-areas validation failed: ${allAreasQuestion}`);
   console.table(comparisons);
-  console.log("DLD validation passed: schema, integrity and 11 direct-query comparisons, including trend counts, last 6 months, mixed places and an all-areas median over 20,000 rows.");
+  console.log("DLD validation passed: schema, integrity and 12 direct-query comparisons, including unknown-bedroom villas, trend counts, last 6 months, mixed places and an all-areas median over 20,000 rows.");
 }
 
 main().catch((error: unknown) => {

@@ -86,14 +86,29 @@ describe("ask (demo reader, sample data)", () => {
 
   it("declines property-type comparisons without silently selecting one", async () => {
     const result = await ask("Dubai Hills villas vs townhouses");
-    expect(result.unsupported).toBe("I can compare places, not property types yet. Ask about villas and townhouses separately.");
+    expect(result.unsupported).toBe("I can answer one property type at a time. Ask about villas and townhouses separately, or leave the type out to include both.");
     expect(result.summary).toBeNull();
+  });
+
+  it.each(["2-3 bed apartments in JVC", "2–3 bed apartments in JVC", "2 to 3 bedroom flats in JLT", "2 through 3 bed apartments in JVC"])("declines bedroom range %s", async (question) => {
+    const result = await ask(question);
+    expect(result.unsupported).toBe("I can answer one bedroom count at a time. Ask about 2-beds and 3-beds separately, or leave the bedrooms out to include all.");
+  });
+
+  it("names the property types that were asked", async () => {
+    const result = await ask("apartments and villas in Dubai Hills");
+    expect(result.unsupported).toBe("I can answer one property type at a time. Ask about apartments and villas separately, or leave the type out to include both.");
+  });
+
+  it("does not resolve a numbered place to the unnumbered place", async () => {
+    const result = await ask("Villas in Arabian Ranches 3 last year");
+    expect(result.plan.areas).not.toContain("Arabian Ranches");
   });
 
   it.each([
     ["villas and townhouses in Arabian Ranches 3", "I can answer one property type at a time. Ask about villas and townhouses separately, or leave the type out to include both."],
     ["compare studios and 1 beds in JVC", "I can answer one bedroom count at a time. Ask about studios and 1-beds separately, or leave the bedrooms out to include all."],
-    ["1 or 2 bed apartments in JVC", "I can answer one bedroom count at a time. Ask about studios and 1-beds separately, or leave the bedrooms out to include all."],
+    ["1 or 2 bed apartments in JVC", "I can answer one bedroom count at a time. Ask about 1-beds and 2-beds separately, or leave the bedrooms out to include all."],
   ])("does not silently drop a filter in %s", async (question, message) => {
     const result = await ask(question);
     expect(result.unsupported).toBe(message);
