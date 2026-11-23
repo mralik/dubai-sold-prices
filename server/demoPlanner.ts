@@ -38,6 +38,60 @@ function findPlaces(q: string, patterns: { pattern: string; name: string }[]): {
 
 const COMPARISON = /\b(compare|vs\.?|versus)\b/;
 
+const PROPERTY_TYPE_MESSAGE = "I can answer one property type at a time. Ask about villas and townhouses separately, or leave the type out to include both.";
+const BEDROOM_MESSAGE = "I can answer one bedroom count at a time. Ask about studios and 1-beds separately, or leave the bedrooms out to include all.";
+
+function maskPlaceNames(q: string): string {
+  const communityMatch = findPlaces(q, COMMUNITY_PATTERNS);
+  return findPlaces(communityMatch.masked, AREA_PATTERNS).masked;
+}
+
+function mentionedPropertyTypes(q: string): QueryPlan["propertyType"][] {
+  const found: QueryPlan["propertyType"][] = [];
+  if (/\bvillas?\b/.test(q)) found.push("villa");
+  if (/\btown\s?houses?\b/.test(q)) found.push("townhouse");
+  if (/\b(apartments?|flats?|units?|condos?)\b/.test(q)) found.push("apartment");
+  return found;
+}
+
+function roomValue(value: string): QueryPlan["rooms"] {
+  if (/^studios?$/.test(value)) return "studio";
+  return toRooms(NUMBER_WORDS[value] ?? value);
+}
+
+function mentionedRooms(q: string): QueryPlan["rooms"][] {
+  const found = new Set<QueryPlan["rooms"]>();
+  if (/\bstudios?\b/.test(q)) found.add("studio");
+  for (const match of q.matchAll(/\b(one|two|three|four|five|\d)\s*[- ]?\s*(?:\+\s*)?(?:beds?|bedrooms?|br|b\/r|bhk|bd)\b/g)) {
+    found.add(roomValue(match[1]!));
+  }
+  // In "1 or 2 bed", the bedroom suffix is shared by both numbers.
+  for (const match of q.matchAll(/\b(one|two|three|four|five|\d)\s*(?:and|or|&|\/|,)\s*(one|two|three|four|five|\d)\s*[- ]?\s*(?:\+\s*)?(?:beds?|bedrooms?|br|b\/r|bhk|bd)\b/g)) {
+    found.add(roomValue(match[1]!));
+    found.add(roomValue(match[2]!));
+  }
+  return [...found];
+}
+
+function mentionedRegistrations(q: string): QueryPlan["registration"][] {
+  const found: QueryPlan["registration"][] = [];
+  if (/\boff[\s-]?plan\b/.test(q)) found.push("off-plan");
+  if (/\b(ready|secondary|resale)\b/.test(q)) found.push("ready");
+  return found;
+}
+
+/** Detect filter intent that a query plan cannot represent without dropping it. */
+export function filterIntentUnsupportedReason(question: string, plan?: QueryPlan): string | null {
+  const q = maskPlaceNames(question.toLowerCase().replace(/\s+/g, " ").trim());
+  const types = mentionedPropertyTypes(q);
+  const rooms = mentionedRooms(q);
+  if (types.length > 1) return PROPERTY_TYPE_MESSAGE;
+  if (rooms.length > 1) return BEDROOM_MESSAGE;
+  if (plan?.status === "ok" && types.length === 1 && plan.propertyType !== types[0]) return PROPERTY_TYPE_MESSAGE;
+  if (plan?.status === "ok" && rooms.length === 1 && plan.rooms !== rooms[0]) return BEDROOM_MESSAGE;
+  return null;
+}
+
 function friendlyPlace(name: string): string {
   const area = AREAS.find((candidate) => candidate.name === name);
   return area ? displayName(area.name, area.aliases) : name;
@@ -85,27 +139,18 @@ function placeSuggestions(): string[] {
 }
 
 function findRooms(q: string): QueryPlan["rooms"] {
-  if (/\bstudios?\b/.test(q)) return "studio";
-  const word = q.match(/\b(one|two|three|four|five)[\s-]*(bed|bedroom|br|b\/r|bhk)/);
-  if (word) return toRooms(NUMBER_WORDS[word[1]!]!);
-  const digit = q.match(/\b(\d)\s*[- ]?\s*(\+)?\s*(bed|beds|bedroom|bedrooms|br|b\/r|bhk|bd)\b/);
-  if (digit) return toRooms(digit[1]!);
-  return "any";
+  return mentionedRooms(q)[0] ?? "any";
 }
 
 const toRooms = (n: string): QueryPlan["rooms"] => (Number(n) >= 5 ? "5+" : (n as QueryPlan["rooms"]));
 
 function findType(q: string): QueryPlan["propertyType"] {
-  if (/\bvillas?\b/.test(q)) return "villa";
-  if (/\btown\s?houses?\b/.test(q)) return "townhouse";
-  if (/\b(apartments?|flats?|units?|condos?)\b/.test(q)) return "apartment";
-  return "any";
+  return mentionedPropertyTypes(q)[0] ?? "any";
 }
 
 function findRegistration(q: string): QueryPlan["registration"] {
-  if (/\boff[\s-]?plan\b/.test(q)) return "off-plan";
-  if (/\b(ready|secondary|resale)\b/.test(q)) return "ready";
-  return "any";
+  const registrations = mentionedRegistrations(q);
+  return registrations.length === 1 ? registrations[0]! : "any";
 }
 
 function findDates(q: string): { dateFrom: string; dateTo: string } {
@@ -167,6 +212,9 @@ export function demoPlan(question: string): QueryPlan {
   const comparisonReason = comparisonUnsupportedReason(question);
   if (comparisonReason) return { status: "unsupported", unsupportedReason: comparisonReason, ...base };
 
+  const filterReason = filterIntentUnsupportedReason(question);
+  if (filterReason) return { status: "unsupported", unsupportedReason: filterReason, ...base };
+
   // Community matches are removed first, so a precise master-project filter
   // wins over a broader DLD area alias.
   const communityMatch = findPlaces(q, COMMUNITY_PATTERNS);
@@ -189,9 +237,9 @@ export function demoPlan(question: string): QueryPlan {
     unsupportedReason: "",
     areas,
     communities,
-    propertyType: findType(q),
-    rooms: findRooms(q),
-    registration: findRegistration(q),
+    propertyType: findType(maskPlaceNames(q)),
+    rooms: findRooms(maskPlaceNames(q)),
+    registration: findRegistration(maskPlaceNames(q)),
     ...findDates(q),
     metric: findMetric(q),
     groupBy: COMPARISON.test(q) && areas.length + communities.length === 2 ? "area" : findGroupBy(q, [...areas, ...communities]),

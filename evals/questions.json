@@ -29,5 +29,8 @@
   { "q": "What is the rent for a studio in JLT?", "unsupported": true },
   { "q": "Should I buy a villa in Arabian Ranches?", "unsupported": true },
   { "q": "Mortgage registrations in Dubai Marina last year", "unsupported": true },
-  { "q": "Prices in Narnia Heights", "unsupported": true }
+  { "q": "Prices in Narnia Heights", "unsupported": true },
+  { "q": "villas and townhouses in Arabian Ranches 3", "unsupported": true },
+  { "q": "compare studios and 1 beds in JVC", "unsupported": true },
+  { "q": "1 or 2 bed apartments in JVC", "unsupported": true }
 ]

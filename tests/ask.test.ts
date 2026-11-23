@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ask } from "../server/ask";
+import { filterIntentUnsupportedReason } from "../server/demoPlanner";
 import { query } from "../server/db";
 import { placeLabelsForQuestion } from "../server/placeLabels";
 import type { QueryPlan } from "../server/plan";
@@ -87,6 +88,34 @@ describe("ask (demo reader, sample data)", () => {
     const result = await ask("Dubai Hills villas vs townhouses");
     expect(result.unsupported).toBe("I can compare places, not property types yet. Ask about villas and townhouses separately.");
     expect(result.summary).toBeNull();
+  });
+
+  it.each([
+    ["villas and townhouses in Arabian Ranches 3", "I can answer one property type at a time. Ask about villas and townhouses separately, or leave the type out to include both."],
+    ["compare studios and 1 beds in JVC", "I can answer one bedroom count at a time. Ask about studios and 1-beds separately, or leave the bedrooms out to include all."],
+    ["1 or 2 bed apartments in JVC", "I can answer one bedroom count at a time. Ask about studios and 1-beds separately, or leave the bedrooms out to include all."],
+  ])("does not silently drop a filter in %s", async (question, message) => {
+    const result = await ask(question);
+    expect(result.unsupported).toBe(message);
+    expect(result.summary).toBeNull();
+  });
+
+  it("treats off-plan and ready together as no registration filter", async () => {
+    expect(filterIntentUnsupportedReason("off-plan and ready villas in Damac Hills")).toBeNull();
+    const result = await ask("off-plan and ready villas in DAMAC Hills 2");
+    expect(result.unsupported).toBeNull();
+    expect(result.plan.propertyType).toBe("villa");
+    expect(result.plan.registration).toBe("any");
+  });
+
+  it.each([
+    "2-bed in Al Furjan",
+    "Villas in Arabian Ranches 3 last year",
+    "Town Square 2 bed",
+    "studios in discovery gardens",
+    "Compare JLT and JVC 1-bed prices",
+  ])("does not mistake a place name for a filter in %s", (question) => {
+    expect(filterIntentUnsupportedReason(question)).toBeNull();
   });
 
   it("uses Dubai Marina as the friendly label for Marsa Dubai", async () => {

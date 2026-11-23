@@ -7,7 +7,7 @@ import { AREAS } from "./areas";
 import { claudePlan, CLAUDE_MODEL, estimateCostUsd, PlannerError } from "./claudePlanner";
 import { compilePlan, ROW_LIMIT } from "./compile";
 import { query } from "./db";
-import { comparisonUnsupportedReason, demoPlan } from "./demoPlanner";
+import { comparisonUnsupportedReason, demoPlan, filterIntentUnsupportedReason } from "./demoPlanner";
 import { addMonths, describePlan, validatePlan, type QueryPlan } from "./plan";
 import { DATA_INFO } from "./dataMode";
 import type { SaleRecord } from "./sampleData";
@@ -98,6 +98,9 @@ export async function ask(question: string): Promise<AskResult> {
     rawPlan = demoPlan(question);
     if (plannerMode() === "claude") planner.note = "Today's Claude limit was reached, so the built-in reader answered.";
   }
+
+  const filterReason = rawPlan.status === "ok" ? filterIntentUnsupportedReason(question, rawPlan) : null;
+  if (filterReason) rawPlan = { ...rawPlan, status: "unsupported", unsupportedReason: filterReason };
 
   const { plan, warnings } = validatePlan(rawPlan);
   const resolvedPlaces = resolvedPlacesForQuestion(question, plan);
