@@ -1,0 +1,12 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+evals/reports/
+
+# Real DLD data: never commit
+data/raw/
+data/processed/

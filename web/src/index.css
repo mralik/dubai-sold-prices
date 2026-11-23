@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+/* Design: Dubai sand by day, Dubai night after dark. Muted brass and Gulf teal accents.
+   Colours are CSS variables so one set of class names works in both themes. */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: "Noto Kufi Arabic", "Geeza Pro", sans-serif;
+
+}
+
+@theme inline {
+  --color-night-950: var(--night-950);
+  --color-night-900: var(--night-900);
+  --color-night-850: var(--night-850);
+  --color-night-800: var(--night-800);
+  --color-night-700: var(--night-700);
+  --color-night-600: var(--night-600);
+  --color-ink-100: var(--ink-100);
+  --color-ink-300: var(--ink-300);
+  --color-ink-400: var(--ink-400);
+  --color-ink-500: var(--ink-500);
+  --color-line: var(--line);
+  --color-gold-200: var(--gold-200);
+  --color-gold-300: var(--gold-300);
+  --color-gold-400: var(--gold-400);
+  --color-gold-500: var(--gold-500);
+  --color-gold-600: var(--gold-600);
+  --color-gulf-300: var(--gulf-300);
+  --color-gulf-400: var(--gulf-400);
+  --color-gulf-500: var(--gulf-500);
+}
+
+/* Light: desert sand */
+:root {
+  color-scheme: light;
+  --night-950: #f1ebe0;
+  --night-900: #faf7f1;
+  --night-850: #ffffff;
+  --night-800: #f6f1e8;
+  --night-700: #e9e1d2;
+  --night-600: #d8ccb6;
+  --ink-100: #121827;
+  --ink-300: #3b4459;
+  --ink-400: #5b6479;
+  --ink-500: #7d8597;
+  --line: #2a2214;
+  --gold-200: #76551f;
+  --gold-300: #87662f;
+  --gold-400: #a98242;
+  --gold-500: #8d6b35;
+  --gold-600: #725429;
+  --gulf-300: #0b7468;
+  --gulf-400: #129c8b;
+  --gulf-500: #0e8c7f;
+  --glow-a: rgb(169 130 66 / 0.10);
+  --glow-b: rgb(18 156 139 / 0.08);
+  --glow-c: rgb(169 130 66 / 0.05);
+  --card-shadow: 0 1px 0 0 rgb(255 255 255 / 0.55) inset, 0 14px 32px -25px rgb(55 43 20 / 0.22);
+  --sky-top: #e9dcc3;
+  --sky-bottom: #f6efe2;
+  --sky-edge: #a98242;
+  --sky-light: #a98242;
+  --sky-glow: #c4a266;
+}
+
+/* Dark: Dubai at night */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --night-950: #050811;
+  --night-900: #070b16;
+  --night-850: #0b1120;
+  --night-800: #10182b;
+  --night-700: #1a2540;
+  --night-600: #26324f;
+  --ink-100: #eef1f7;
+  --ink-300: #b7c0d4;
+  --ink-400: #8e99b3;
+  --ink-500: #6b7691;
+  --line: #ffffff;
+  --gold-200: #e0cfaa;
+  --gold-300: #cbb47b;
+  --gold-400: #b89452;
+  --gold-500: #9d7a3f;
+  --gold-600: #80602e;
+  --gulf-300: #7ee8d8;
+  --gulf-400: #3fd3bd;
+  --gulf-500: #19b3a0;
+  --glow-a: rgb(25 179 160 / 0.10);
+  --glow-b: rgb(184 148 82 / 0.09);
+  --glow-c: rgb(63 80 160 / 0.10);
+  --card-shadow: 0 1px 0 0 rgb(255 255 255 / 0.035) inset, 0 16px 38px -22px rgb(0 0 0 / 0.55);
+  --sky-top: #1a2540;
+  --sky-bottom: #0b1120;
+  --sky-edge: #b89452;
+  --sky-light: #cbb47b;
+  --sky-glow: #b89452;
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-night-900 font-sans text-ink-100 antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1, h2, h3 { @apply font-display; }
+  ::selection { background: rgb(18 156 139 / 0.25); }
+}
+
+/* Page backdrop: night sky glow + a faint eight-point star (khatam) pattern. */
+@utility backdrop {
+  background:
+    radial-gradient(1100px 600px at 15% -10%, var(--glow-a), transparent 60%),
+    radial-gradient(900px 520px at 90% 0%, var(--glow-b), transparent 60%),
+    radial-gradient(700px 400px at 50% 110%, var(--glow-c), transparent 70%),
+    var(--color-night-900);
+}
+@utility pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23e2b357' stroke-width='0.8' opacity='0.9'%3E%3Cpath d='M32 14l5.3 12.7L50 32l-12.7 5.3L32 50l-5.3-12.7L14 32l12.7-5.3z'/%3E%3Crect x='20' y='20' width='24' height='24' transform='rotate(45 32 32)'/%3E%3Crect x='20' y='20' width='24' height='24'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 20%, transparent 75%);
+}
+
+/* Glass card. */
+@utility card {
+  @apply rounded-2xl border border-line/[0.08] bg-night-850/75 backdrop-blur-xl;
+  box-shadow: var(--card-shadow);
+}
+
+/* Static brass-to-teal edge reserved for the search box. */
+@utility glow-border {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(120deg, var(--gold-400), var(--gulf-400), color-mix(in srgb, var(--gold-400) 25%, transparent), var(--gulf-400));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+html.theme-transition, html.theme-transition * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, fill 0.3s ease !important;
+}
+
+@utility focus-ring {
+  @apply outline-none focus-visible:ring-2 focus-visible:ring-gulf-400 focus-visible:ring-offset-2 focus-visible:ring-offset-night-900;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* The client report is always a light document, including from a dark app theme. */
+.report-paper .report-chart .card {
+  border: 0;
+  background: #fff;
+  box-shadow: none;
+  padding-inline: 0;
+}
+.report-paper .report-chart h2 { color: #121827; }
+.report-paper .report-chart p { color: #5b6479; }
+
+@page { size: A4; margin: 12mm; }
+
+@media print {
+  html, body { background: #fff !important; }
+  body > *:not(.report-overlay) { display: none !important; }
+  .report-overlay {
+    position: static !important;
+    overflow: visible !important;
+    background: #fff !important;
+    padding: 0 !important;
+  }
+  .report-toolbar { display: none !important; }
+  .report-mobile-actions, .report-copy-status { display: none !important; }
+  .report-paper {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .report-block, .report-card, .report-chart, .report-paper tr { break-inside: avoid; page-break-inside: avoid; }
+  .report-paper table { min-width: 0 !important; }
+  .report-chart { min-height: 290px; }
+}

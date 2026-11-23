@@ -1,0 +1,65 @@
+{
+  "JLT": {
+    "values": ["DMCC Master Community"],
+    "aliases": ["jlt", "jumeirah lake towers"]
+  },
+  "Al Furjan": {
+    "values": ["Al Furjan"],
+    "aliases": ["al furjan", "furjan"]
+  },
+  "Discovery Gardens": {
+    "values": ["Discovery Gardens"],
+    "aliases": ["discovery gardens"]
+  },
+  "Wasl Gate": {
+    "values": ["Wasl Gate"],
+    "aliases": ["wasl gate"]
+  },
+  "Sobha Hartland": {
+    "values": ["SOBHA HARTLAND"],
+    "aliases": ["sobha hartland"]
+  },
+  "Meydan One": {
+    "values": ["Meydan One Community"],
+    "aliases": ["meydan one", "meydan one community"]
+  },
+  "Jumeirah Golf Estates": {
+    "values": ["Jumeirah Golf Estates"],
+    "aliases": ["jumeirah golf estates", "jge"]
+  },
+  "Arabian Ranches 3": {
+    "values": ["Arabian Ranches 3"],
+    "aliases": ["arabian ranches 3", "ranches 3"]
+  },
+  "Falcon City": {
+    "values": ["Falcon City"],
+    "aliases": ["falcon city", "falconcity"]
+  },
+  "Tilal Al Ghaf": {
+    "values": ["TILAL AL GHAF"],
+    "aliases": ["tilal al ghaf"]
+  },
+  "Remraam": {
+    "values": ["Remraam"],
+    "aliases": ["remraam"]
+  },
+  "Expo City": {
+    "values": ["EXPO CITY"],
+    "aliases": ["expo city", "expo city dubai"]
+  },
+  "LUNAYA": {
+    "values": [],
+    "projects": ["LUNAYA"],
+    "aliases": ["lunaya"]
+  },
+  "Sobha Sanctuary": {
+    "values": [],
+    "projects": ["The Woods", "The Greens at Sobha Sanctuary", "The Brooks at Sobha Sanctuary"],
+    "aliases": ["sobha sanctuary"]
+  },
+  "Sobha Central": {
+    "values": [],
+    "projects": ["Sobha Central", "Sobha Central Phase I", "Sobha Central Phase II"],
+    "aliases": ["sobha central"]
+  }
+}

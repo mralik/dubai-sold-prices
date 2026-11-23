@@ -1,0 +1,31 @@
+transaction_id,instance_date,trans_group_en,procedure_name_en,property_usage_en,property_type_en,property_sub_type_en,rooms_en,area_name_en,project_name_en,reg_type_en,procedure_area,actual_worth,master_project_en
+T001,2026-09-01,Sales,Sell,Residential,Unit,Apartment,Studio,Jumeirah Village Circle,Fixture One,Off-Plan,45,650000,Jumeirah Village Circle
+T002,2026-09-02,Sales,Sell,Residential,Unit,Apartment,1 B/R,Jumeirah Village Circle,Fixture One,Off-Plan,70,900000
+T003,2026-09-03,Sales,Sell,Residential,Unit,Apartment,2 B/R,Jumeirah Village Circle,Fixture Two,Existing Properties,105,1350000
+T004,2026-09-04,Sales,Sell,Residential,Villa,Villa,3 B/R,Dubai Hills Estate,Fixture Villas,Existing Properties,240,4200000
+T005,2026-09-05,Sales,Sell,Residential,Villa,Villa,4 B/R,Dubai Hills Estate,Fixture Villas,Off-Plan,350,6100000
+T006,2026-09-06,Sales,Sell,Residential,Unit,Townhouse,3 B/R,Dubai South,Fixture Towns,Off-Plan,190,2200000
+T007,2026-09-07,Sales,Sell,Residential,Unit,Apartment,1 B/R,Dubai Marina,Fixture Marina,Existing Properties,75,1500000
+T008,2026-09-08,Sales,Sell,Residential,Unit,Apartment,2 B/R,Dubai Marina,Fixture Marina,Existing Properties,115,2450000
+T009,2026-09-09,Sales,Sell,Residential,Unit,Apartment,3 B/R,Downtown Dubai,Fixture Downtown,Off-Plan,160,5100000
+T010,2026-09-10,Sales,Sell,Residential,Unit,Apartment,1 B/R,Business Bay,Fixture Bay,Off-Plan,68,1300000
+T011,2026-09-11,Sales,Sell,Residential,Unit,Apartment,2 B/R,Business Bay,Fixture Bay,Existing Properties,110,2100000
+T012,2026-09-12,Sales,Sell,Residential,Villa,Villa,5 B/R,Palm Jumeirah,Fixture Palm,Existing Properties,600,25000000
+T013,2026-09-13,Sales,Sell,Residential,Unit,Apartment,Studio,International City,Fixture Intl,Existing Properties,40,380000
+T014,2026-09-14,Sales,Sell,Residential,Unit,Apartment,2 B/R,Jumeirah Lake Towers,Fixture JLT,Existing Properties,108,1650000
+T015,2026-09-15,Sales,Sell,Residential,Unit,Apartment,1 B/R,Dubai Creek Harbour,Fixture Creek,Off-Plan,72,1700000
+T016,2026-09-16,Sales,Sell,Residential,Unit,Town House,4 B/R,Arabian Ranches,Fixture Ranches,Existing Properties,280,4800000
+T017,2026-09-17,Sales,Sell,Residential,Villa,Villa,4 B/R,DAMAC Hills 2,Fixture DH2,Existing Properties,300,2600000
+T018,2026-09-18,Sales,Sell,Residential,Unit,Apartment,2 B/R,Al Barsha,Fixture Barsha,Existing Properties,112,1400000
+T019,2026-09-19,Sales,Sell,Residential,Unit,Apartment,1 B/R,Mohammed Bin Rashid City,Fixture MBR,Off-Plan,74,1600000
+T020,2026-09-20,Sales,Sell,Residential,Unit,Apartment,2 B/R,Dubai South,Fixture South,Off-Plan,100,1050000
+T021,2026-09-21,Mortgages,Mortgage,Residential,Unit,Apartment,1 B/R,Business Bay,Reject Mortgage,Existing Properties,70,1000000
+T022,2026-09-22,Sales,Sell,Commercial,Unit,Office,,Business Bay,Reject Commercial,Existing Properties,100,2000000
+T023,2026-09-23,Sales,Sell,Residential,Unit,Apartment,1 B/R,Business Bay,Reject Zero Price,Existing Properties,70,0
+T024,2026-09-24,Sales,Sell,Residential,Unit,Apartment,1 B/R,Business Bay,Reject Zero Size,Existing Properties,0,1000000
+T020,2026-09-20,Sales,Sell,Residential,Unit,Apartment,2 B/R,Dubai South,Duplicate,Off-Plan,100,1050000
+T026,2026-09-26,Sales,Sell,Residential,Unit,Apartment,Loft,Dubai Marina,Reject Room,Existing Properties,90,1800000
+T027,2026-09-27,Sales,Sell,Residential,Land,Plot,,Dubai South,Reject Type,Existing Properties,500,3000000
+T028,2026-09-28,Sales,Sell,Residential,Unit,Apartment,1 B/R,Dubai Marina,Reject Registration,Unknown,70,1400000
+T029,2026-09-29,Sales,Sell,Residential,Unit,Apartment,1 B/R,Dubai Marina,Reject PSF,Existing Properties,70,999999999
+T030,2026-08-31,Sales,Sell,Residential,Unit,Apartment,1 B/R,Dubai Marina,Other Month,Existing Properties,70,1400000
