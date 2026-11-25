@@ -12,12 +12,18 @@ import snapshot from "./generated/snapshot.json";
 
 interface Env {
   DB: D1Database;
-  /** Cloudflare Turnstile keys. Without both, there's no human check (local runs). */
+  /** Cloudflare Turnstile keys. With no site key there's no human check (local runs). */
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
 }
 
-const humanCheckOn = (env: Env) => Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY);
+const humanCheckOn = (env: Env) => Boolean(env.TURNSTILE_SITE_KEY?.trim());
+/**
+ * A site key without a usable secret is a setup mistake. Fail closed: refuse
+ * questions rather than let bots through without a check.
+ */
+const humanCheckBroken = (env: Env) => humanCheckOn(env) && !env.TURNSTILE_SECRET_KEY?.trim();
+const UNAVAILABLE = { error: "Questions are paused for a moment while the site is being set up. Please try again soon." };
 
 interface Context {
   waitUntil(promise: Promise<unknown>): void;
@@ -87,6 +93,12 @@ export default {
       return withHeaders(json({ ...meta, turnstileSiteKey: humanCheckOn(env) ? env.TURNSTILE_SITE_KEY : null }, 300));
     }
     if (request.method === "GET" && pathname === "/api/snapshot") return withHeaders(json(snapshot, 3600));
+    if (pathname === "/api/human" || pathname === "/api/ask") {
+      if (humanCheckBroken(env)) {
+        console.error("TURNSTILE_SECRET_KEY is missing or empty, so questions are refused until it is set.");
+        return withHeaders(Response.json(UNAVAILABLE, { status: 503 }), { "cache-control": "no-store", "retry-after": "300" });
+      }
+    }
     if (request.method === "POST" && pathname === "/api/human") {
       if (!humanCheckOn(env)) return withHeaders(new Response(null, { status: 204 }));
       const cookie = await verifyHuman(request, env.TURNSTILE_SECRET_KEY!);
