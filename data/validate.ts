@@ -29,6 +29,7 @@ async function main() {
     return combos;
   });
 
+  await import("../server/db");
   const { ask } = await import("../server/ask");
   const comparisons: Record<string, unknown>[] = [];
   for (const candidate of candidates) {

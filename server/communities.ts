@@ -38,3 +38,20 @@ export const COMMUNITY_PATTERNS = COMMUNITIES.flatMap((community) =>
   [community.name, ...community.aliases].map((pattern) => ({ pattern: pattern.toLowerCase(), name: community.name })),
 ).sort((a, b) => b.pattern.length - a.pattern.length);
 
+/**
+ * The areas each community's sales fall in, worked out from the data when the
+ * Cloudflare build is prepared (data/cfPrepare.ts). Null when unknown.
+ */
+const communityAreaMap = (globalThis as { __COMMUNITY_AREAS__?: Record<string, string[]> }).__COMMUNITY_AREAS__ ?? null;
+
+/** Every area that holds sales of these communities, or null if any is unknown. */
+export function communityAreas(names: string[]): string[] | null {
+  if (!communityAreaMap) return null;
+  const areas: string[] = [];
+  for (const name of names) {
+    const list = communityAreaMap[name];
+    if (!list) return null;
+    areas.push(...list);
+  }
+  return [...new Set(areas)];
+}

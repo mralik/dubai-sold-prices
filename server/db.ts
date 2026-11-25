@@ -1,7 +1,9 @@
-// SQLite database in memory, using sql.js (SQLite compiled to WebAssembly).
-// It runs the same SQL as Cloudflare D1, so the queries move over unchanged.
+// Local SQLite database in memory, using sql.js (SQLite compiled to WebAssembly).
+// It runs the same SQL as Cloudflare D1. Importing this file makes it the
+// database for every query (see database.ts). The Cloudflare Worker never imports it.
 
 import initSqlJs, { type Database, type SqlValue } from "sql.js";
+import { query as runQuery, useDatabaseLoader } from "./database";
 import { rows, sqlString, withDuckDb } from "../data/duckdb";
 import { DATA_MODE, DLD_PARQUET_PATH } from "./dataMode";
 import { generateSales } from "./sampleData";
@@ -71,9 +73,7 @@ export function getDb(): Promise<Database> {
   return dbPromise;
 }
 
-/** Runs a read-only, parameterised query and returns rows as objects. */
-export async function query<T = Record<string, SqlValue>>(sql: string, params: SqlValue[] = []): Promise<T[]> {
-  if (!/^\s*select\b/i.test(sql)) throw new Error("Only SELECT queries are allowed.");
+async function nodeQuery<T>(sql: string, params: SqlValue[]): Promise<T[]> {
   const db = await getDb();
   const stmt = db.prepare(sql);
   try {
@@ -85,3 +85,8 @@ export async function query<T = Record<string, SqlValue>>(sql: string, params: S
     stmt.free();
   }
 }
+
+useDatabaseLoader(async () => ({ all: nodeQuery }));
+
+/** Runs a read-only, parameterised query and returns rows as objects. */
+export const query = runQuery;

@@ -1,4 +1,5 @@
 import type { AskResult } from "../../server/ask";
+import { passHumanCheck, setHumanCheckKey } from "./humanCheck";
 
 export type { AskResult };
 
@@ -14,6 +15,8 @@ export interface Meta {
   model: string | null;
   examples: string[];
   sampleData: boolean;
+  /** Cloudflare Turnstile site key, when the server asks visitors to prove they're human. */
+  turnstileSiteKey?: string | null;
 }
 
 async function readJson<T>(res: Response): Promise<T> {
@@ -81,14 +84,30 @@ export interface Snapshot {
   };
 }
 
-export const getMeta = () => fetch("/api/meta").then((r) => readJson<Meta>(r));
+export const getMeta = () =>
+  fetch("/api/meta").then((r) => readJson<Meta>(r)).then((meta) => {
+    setHumanCheckKey(meta.turnstileSiteKey);
+    return meta;
+  });
 
 export const getSnapshot = (signal?: AbortSignal) => fetch("/api/snapshot", { signal }).then((r) => readJson<Snapshot>(r));
 
-export const askQuestion = (question: string, signal?: AbortSignal) =>
-  fetch("/api/ask", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ question }),
-    signal,
-  }).then((r) => readJson<AskResult>(r));
+export async function askQuestion(question: string, signal?: AbortSignal): Promise<AskResult> {
+  const post = () =>
+    fetch("/api/ask", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ question }),
+      signal,
+    });
+  let response = await post();
+  // The public demo asks for a quick human check before the first question.
+  if (response.status === 401) {
+    const data = (await response.clone().json().catch(() => null)) as { needsHumanCheck?: boolean } | null;
+    if (data?.needsHumanCheck) {
+      await passHumanCheck();
+      response = await post();
+    }
+  }
+  return readJson<AskResult>(response);
+}

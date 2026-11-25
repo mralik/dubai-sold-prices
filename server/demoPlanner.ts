@@ -31,7 +31,8 @@ function findPlaces(q: string, patterns: { pattern: string; name: string }[]): {
     const after = text.slice(start + match[2]!.length);
     // Do not let a broad nickname consume a numbered place, while still
     // allowing questions such as "Damac Hills 3 bed".
-    if (/^\s+\d+\b(?!\s*[- ]?\s*(?:beds?|bedrooms?|br|b\/r|bhk|bd)\b)/.test(after)) continue;
+    // A year ("Dubai Marina 2025") is not part of the place name either.
+    if (/^\s+(?!(?:19|20)\d{2}\b)\d+\b(?!\s*[- ]?\s*(?:beds?|bedrooms?|br|b\/r|bhk|bd)\b)/.test(after)) continue;
     if (!found.has(name)) found.set(name, start);
     // Blank out the match (same length) so shorter nicknames can't match it again.
     text = text.slice(0, start) + " ".repeat(match[2]!.length) + text.slice(start + match[2]!.length);

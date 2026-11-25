@@ -19,7 +19,14 @@
     "data:inspect": "tsx data/inspect.ts 'data/raw/transactions_*.csv'",
     "data:import": "tsx data/import.ts 'data/raw/transactions_*.csv' data/processed/sales.parquet",
     "data:update": "tsx data/update.ts && npm run data:validate && npm test",
-    "data:validate": "DATA_MODE=dld tsx data/validate.ts"
+    "data:validate": "DATA_MODE=dld tsx data/validate.ts",
+    "cf:typecheck": "tsc --noEmit -p worker",
+    "cf:prepare": "DATA_MODE=dld tsx data/cfPrepare.ts",
+    "cf:build": "vite build && tsx data/cfHeaders.ts && npm run cf:prepare",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "npm run cf:build && wrangler deploy",
+    "d1:export": "tsx data/d1Export.ts",
+    "d1:load:local": "tsx data/d1Load.ts --local"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.12.0",
@@ -46,7 +53,8 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",
-    "vitest": "^5.1.1"
+    "vitest": "^5.1.1",
+    "wrangler": "4.158.0"
   },
   "author": "Ali Kalantari (https://thealik.com)",
   "license": "MIT"

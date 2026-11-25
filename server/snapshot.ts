@@ -5,7 +5,7 @@
 import { summarize } from "./aggregate";
 import { AREAS } from "./areas";
 import { COMMUNITIES, communityProjects, communityValues } from "./communities";
-import { query } from "./db";
+import { query } from "./database";
 import { DATA_INFO } from "./dataMode";
 import { displayName } from "./displayName";
 import { addMonths, monthLongLabel } from "./plan";

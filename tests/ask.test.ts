@@ -143,4 +143,14 @@ describe("ask (demo reader, sample data)", () => {
     expect(result.summary?.psfP25).not.toBeNull();
     expect(result.summary?.psfP75).not.toBeNull();
   });
+
+describe("a year after a place name", () => {
+  it("is read as the period, not as part of the place", async () => {
+    const result = await ask("ready 3 bed apartments in Dubai Marina 2025");
+    expect(result.unsupported).toBeNull();
+    expect(result.plan.areas).toEqual(["Dubai Marina"]);
+    expect(result.plan.dateFrom).toBe("2025-01");
+    expect(result.plan.dateTo).toBe("2025-12");
+  });
+});
 });

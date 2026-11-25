@@ -5,7 +5,7 @@ import { AREAS } from "./areas";
 import { ask, plannerMode } from "./ask";
 import { getSnapshot } from "./snapshot";
 import { CLAUDE_MODEL } from "./claudePlanner";
-import { query } from "./db";
+import { query } from "./database";
 import { DATA_INFO } from "./dataMode";
 
 const SAMPLE_EXAMPLE_QUESTIONS = [
@@ -32,7 +32,7 @@ function dldExamples(topAreas: string[]): string[] {
   return [
     `What did 1-bed apartments in ${first} sell for?`,
     "JVC 1-bed price per sq ft month by month",
-    `Compare ${first} and ${second} apartment prices`,
+    `Compare ${first} and ${second} 1-bed apartment prices`,
     `How many off-plan sales were recorded in ${third}?`,
   ];
 }

@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 export type DataMode = "sample" | "dld";
 
-interface DldMetadata {
+export interface DldMetadata {
   sourceLabel: string;
   attribution: string;
   dateFrom: string;
@@ -15,13 +15,15 @@ interface DldMetadata {
   kept: number;
 }
 
-const parquetUrl = new URL("../data/processed/sales.parquet", import.meta.url);
-const metadataUrl = new URL("../data/processed/sales.parquet.meta.json", import.meta.url);
+/** The Cloudflare Worker has no file system, so it sets the metadata here first (worker/setup.ts). */
+const injected = (globalThis as { __DLD_METADATA__?: DldMetadata }).__DLD_METADATA__;
 
 export const DATA_MODE: DataMode = process.env.DATA_MODE === "dld" ? "dld" : "sample";
-export const DLD_PARQUET_PATH = fileURLToPath(parquetUrl);
+export const DLD_PARQUET_PATH = injected ? "" : fileURLToPath(new URL("../data/processed/sales.parquet", import.meta.url));
 
 function readDldMetadata(): DldMetadata {
+  if (injected) return injected;
+  const metadataUrl = new URL("../data/processed/sales.parquet.meta.json", import.meta.url);
   if (!existsSync(DLD_PARQUET_PATH) || !existsSync(metadataUrl)) {
     throw new Error("DATA_MODE=dld requires data/processed/sales.parquet. Run npm run data:import first.");
   }

@@ -10,3 +10,9 @@ evals/reports/
 # Real DLD data: never commit
 data/raw/
 data/processed/
+
+# Cloudflare: generated from the DLD data, and wrangler's local state
+worker/generated/
+data/d1/
+.wrangler/
+.dev.vars

@@ -1,0 +1,31 @@
+// Cloudflare Worker for https://dubai.thealik.com. See "Deploy to Cloudflare" in the README.
+// The account is picked at login (or with CLOUDFLARE_ACCOUNT_ID), so no account ID is stored here.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dubai-sold-prices",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Only reachable on the custom domain: the answer cache and Turnstile are tied to it.
+  "routes": [{ "pattern": "dubai.thealik.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dubai-sold-prices",
+      "database_id": "205ee7d4-2b20-4618-8593-d6ca91c0461d"
+    }
+  ],
+  "vars": {
+    "DATA_MODE": "dld",
+    // Public Turnstile site key. The secret key is set with: npx wrangler secret put TURNSTILE_SECRET_KEY
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAGQiWCAOhV3KpL6s"
+  },
+  "observability": { "enabled": true }
+}

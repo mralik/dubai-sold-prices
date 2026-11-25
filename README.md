@@ -116,6 +116,29 @@ Nicknames are in `server/areaAliases.json` and `server/communityAliases.json`. E
 
 `data/raw/` and `data/processed/` are ignored by Git, so the CSV and Parquet files are never committed.
 
+## Deploying to Cloudflare (free plan)
+
+The public demo runs as one Cloudflare Worker: the web app as static assets, the API in `worker/index.ts`, and the sales in Cloudflare D1. It's built to stay within the free plan:
+
+- **Database reads** (5 million rows a day): the `sales` table is stored sorted by area and date, so a question about one area reads only that area. Dubai-wide questions, and answers over 25,000 sales, get a message asking for a narrower question instead. Answers are cached for a day.
+- **Computing** (10 ms a request): `/api/meta` and the home-page snapshot are pre-built at deploy time.
+- **Database writes** (100,000 rows a day): the data is split into files of at most 90,000 rows, loaded one a day.
+- **Bots:** a [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) check is required before the first question. A passed check is remembered for 12 hours in a signed cookie.
+
+Local `npm run dev` has none of these limits.
+
+```bash
+npx wrangler login
+npx wrangler d1 create dubai-sold-prices     # put the database_id in wrangler.jsonc
+npm run d1:export                            # writes data/d1/*.sql
+npx tsx data/d1Load.ts --remote 0-schema.sql 1-rows-01.sql   # day 1
+npx tsx data/d1Load.ts --remote 1-rows-02.sql                # day 2
+npx wrangler secret put TURNSTILE_SECRET_KEY # from the Turnstile widget
+npm run cf:deploy
+```
+
+Set `TURNSTILE_SITE_KEY` under `vars` in `wrangler.jsonc`. To try the Worker locally, run `npm run d1:load:local` and `npm run cf:dev`, with Cloudflare's [Turnstile test keys](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) in `.dev.vars`.
+
 ## Data licence and attribution
 
 Source: Dubai Land Department, via [data.dubai](https://data.dubai/en/l/470061) (Open Data License).
@@ -128,6 +151,7 @@ The application code is licensed under the [MIT License](LICENSE). The DLD data 
 
 - The built-in reader handles common wording only. Its 100% test score comes from questions written alongside it, so treat it as a regression check, not proof of accuracy on new questions.
 - It compares up to two places at a time, and can't compare property types or bedroom counts in one question yet.
+- The public demo answers one area or community at a time, to stay within Cloudflare's free plan.
 - Sales counts for the most recent months may rise as late registrations are added.
 - The web bundle is about 500 KB, mostly the charting library, which could be code-split later.
 

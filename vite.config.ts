@@ -12,5 +12,6 @@ export default defineConfig({
     proxy: { "/api": "http://localhost:8787" },
   },
   build: { outDir: "../dist", emptyOutDir: true },
-  test: { root: ".", include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"] },
+  // Tests use the local sql.js database.
+  test: { root: ".", include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"], setupFiles: ["./server/db.ts"] },
 });

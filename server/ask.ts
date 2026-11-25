@@ -6,7 +6,7 @@ import { registrationSplit as buildRegistrationSplit, writeAnswer, type Answer, 
 import { AREAS } from "./areas";
 import { claudePlan, CLAUDE_MODEL, estimateCostUsd, PlannerError } from "./claudePlanner";
 import { compilePlan, ROW_LIMIT } from "./compile";
-import { query } from "./db";
+import { query } from "./database";
 import { comparisonUnsupportedReason, demoPlan, filterIntentUnsupportedReason } from "./demoPlanner";
 import { addMonths, describePlan, validatePlan, type QueryPlan } from "./plan";
 import { DATA_INFO } from "./dataMode";
@@ -43,6 +43,17 @@ export interface AskResult {
 }
 
 const DAILY_LIMIT = Number(process.env.DAILY_CLAUDE_CALL_LIMIT ?? 50);
+
+/**
+ * Limits for the public demo on Cloudflare's free plan, which allows 5 million
+ * database rows read a day and 10 ms of computing per request. A Dubai-wide
+ * question reads every sale, so the demo asks for a place instead.
+ * Set by worker/setup.ts. Local runs have no limits.
+ */
+const FREE_PLAN_LIMITS = process.env.FREE_PLAN_LIMITS === "1";
+export const FREE_PLAN_MAX_SALES = 25_000;
+export const NEEDS_A_PLACE = "This free demo answers one area or community at a time. Add a place, for example \"1-bed apartments in JVC\" or \"Compare Dubai Marina and JVC\".";
+export const TOO_MANY_SALES = `That matches more than ${FREE_PLAN_MAX_SALES.toLocaleString("en-US")} sales, which is more than this free demo can work through. Add a property type, a bedroom count or a shorter period.`;
 let usage = { day: "", calls: 0 };
 
 export function plannerMode(): PlannerMode {
@@ -117,15 +128,17 @@ export async function ask(question: string): Promise<AskResult> {
     areas: [] as AreaSummary[], series: [] as SeriesPoint[], seriesKeys: [] as string[], seriesCounts: [] as Record<string, number>[], records: [] as SaleRecord[],
   };
 
-  if (plan.status === "unsupported") {
-    return { ...base, unsupported: plan.unsupportedReason || "I can't answer that from sales data.", sql: null, answer: null, summary: null, lowSample: false, truncated: false, timingMs: Date.now() - started };
-  }
+  const refuse = (reason: string): AskResult => ({ ...base, unsupported: reason, sql: null, answer: null, summary: null, lowSample: false, truncated: false, timingMs: Date.now() - started });
+  if (plan.status === "unsupported") return refuse(plan.unsupportedReason || "I can't answer that from sales data.");
+  if (FREE_PLAN_LIMITS && plan.areas.length === 0 && plan.communities.length === 0) return refuse(NEEDS_A_PLACE);
 
-  const { sql, recordsSql, params } = compilePlan(plan);
-  const [rows, records] = await Promise.all([
-    query<SaleRecord>(sql, params),
-    query<SaleRecord>(recordsSql, params),
-  ]);
+  const { sql, params } = compilePlan(plan);
+  const rows = await query<SaleRecord>(FREE_PLAN_LIMITS ? `${sql}\nLIMIT ${FREE_PLAN_MAX_SALES + 1}` : sql, params);
+  if (FREE_PLAN_LIMITS && rows.length > FREE_PLAN_MAX_SALES) return refuse(TOO_MANY_SALES);
+  // The latest sales for the table, from the rows already loaded (newest first).
+  const records = [...rows]
+    .sort((a, b) => b.instance_date.localeCompare(a.instance_date) || b.transaction_id.localeCompare(a.transaction_id))
+    .slice(0, ROW_LIMIT);
 
   const summary = summarize(rows);
   const labels = resolvedPlaces.map((place) => placeLabel(place, rows));

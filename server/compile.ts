@@ -3,9 +3,9 @@
 // Only fixed column names and placeholders ("?") are used. Values from the plan
 // are passed as parameters, never pasted into the SQL text.
 
-import type { SqlValue } from "sql.js";
+import type { SqlValue } from "./database";
 import { addMonths, type QueryPlan } from "./plan";
-import { communityProjects, communityValues } from "./communities";
+import { communityAreas, communityProjects, communityValues } from "./communities";
 
 /** The records table is deliberately small; statistics use every matching row. */
 export const ROW_LIMIT = 25;
@@ -42,6 +42,19 @@ export function compilePlan(plan: QueryPlan): CompiledQuery {
   if (placeWhere.length > 0) {
     where.push(`(${placeWhere.join(" OR ")})`);
     params.push(...placeParams);
+    // On Cloudflare the table is stored sorted by area, so naming the areas a
+    // community sits in lets the database read just those areas. The result
+    // is the same: these are the only areas that hold the community's sales.
+    const areasOfCommunities = plan.communities.length > 0 ? communityAreas(plan.communities) : null;
+    if (areasOfCommunities) {
+      const allAreas = [...new Set([...plan.areas, ...areasOfCommunities])];
+      if (allAreas.length === 0) {
+        where.push("0"); // the community has no sales in the data
+      } else {
+        where.push(`area_name_en IN (${allAreas.map(() => "?").join(", ")})`);
+        params.push(...allAreas);
+      }
+    }
   }
   if (plan.propertyType !== "any") {
     where.push("property_type = ?");
